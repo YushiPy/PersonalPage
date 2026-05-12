@@ -698,6 +698,10 @@ class Scene {
 		} else {
 			this.vertexLineButton.classList.remove("active");
 		}
+
+		if (typeof this.vertexLineButton.toggleIcons === "function") {
+			this.vertexLineButton.toggleIcons();
+		}
 	}
 
 	_getCanvasPos(e) {

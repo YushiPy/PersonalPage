@@ -349,13 +349,8 @@ function initVertexLineToggle() {
 
 	vertexLineToggle.toggleIcons = () => {
 		const isActive = vertexLineToggle.classList.contains("active");
-		if (isActive) {
-			vertexLineToggleOnIcon.style.display = "block";
-			vertexLineToggleOffIcon.style.display = "none";
-		} else {
-			vertexLineToggleOnIcon.style.display = "none";
-			vertexLineToggleOffIcon.style.display = "block";
-		}
+		vertexLineToggleOnIcon.classList.toggle("hidden", !isActive);
+		vertexLineToggleOffIcon.classList.toggle("hidden", isActive);
 	};
 	vertexLineToggle.toggleIcons();
 }

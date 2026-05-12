@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Gabriel F. Ushijima</title>
+	<link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+
+	<script>
+		tailwind.config = {
+			darkMode: 'class',
+			theme: {
+				extend: {
+					colors: {
+						bg:      'var(--bg)',
+						surface: 'var(--surface)',
+						border:  'var(--border)',
+						text:    'var(--text)',
+						muted:   'var(--muted)',
+						accent:  'var(--accent)',
+						tag:     'var(--tag)',
+					},
+					fontFamily: {
+						mono: ['"JetBrains Mono"', 'monospace'],
+						sans: ['"DM Sans"', 'sans-serif'],
+					}
+				}
+			}
+		}
+	</script>
+
+	<style>
+		:root {
+			--bg:      #0d1117;
+			--surface: #161b22;
+			--border:  #30363d;
+			--text:    #e6edf3;
+			--muted:   #8b949e;
+			--accent:  #58a6ff;
+			--tag:     #21262d;
+		}
+		html.light {
+			--bg:      #ffffff;
+			--surface: #f6f8fa;
+			--border:  #d0d7de;
+			--text:    #1f2328;
+			--muted:   #656d76;
+			--accent:  #0969da;
+			--tag:     #eaeef2;
+		}
+
+		* { box-sizing: border-box; margin: 0; padding: 0; }
+
+		html {
+			scroll-behavior: smooth;
+		}
+
+		body {
+			background-color: var(--bg);
+			color: var(--text);
+			font-family: 'DM Sans', sans-serif;
+			font-size: 17px;
+		}
+
+		::-webkit-scrollbar { width: 6px; }
+		::-webkit-scrollbar-track { background: var(--bg); }
+		::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+		/* ── Sidebar ── */
+		#sidebar {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 320px;
+			height: 100vh;
+			background: var(--surface);
+			border-right: 1px solid var(--border);
+			overflow-y: auto;
+			padding: 2rem 2.75rem 2rem 3rem;
+			display: flex;
+			flex-direction: column;
+			gap: 2rem;
+			align-items: flex-start;
+			text-align: left;
+		}
+
+		/* ── Main ── */
+		#main {
+			margin-left: 320px;
+			padding: 3rem 4rem;
+			max-width: 1200px;
+		}
+
+		/* ── Nav ── */
+		.nav-link {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 17px;
+			color: var(--muted);
+			text-decoration: none;
+			padding: 0.35rem 0;
+			transition: color 0.15s;
+		}
+		.nav-link:hover { color: var(--accent); }
+		.nav-link.active { color: var(--text); font-weight: 500; }
+
+		/* ── Sections ── */
+		.section { margin-bottom: 4.5rem; }
+
+		.section-title {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 1.10rem;
+			font-weight: 600;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: var(--muted);
+			margin-bottom: 1.5rem;
+			padding-bottom: 0.6rem;
+			border-bottom: 1px solid var(--border);
+		}
+
+		/* ── Cards ── */
+		.project-card {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1.4rem;
+			margin-bottom: 1rem;
+			transition: border-color 0.15s;
+		}
+		.project-card:hover { border-color: var(--accent); }
+
+		.card-img {
+			width: 100%;
+			border-radius: 6px;
+			margin-bottom: 1rem;
+			border: 1px solid var(--border);
+			object-fit: cover;
+			max-height: 340px;
+			cursor: zoom-in;
+			transition: opacity 0.15s;
+		}
+		.card-img:hover { opacity: 0.85; }
+
+		/* ── Tags ── */
+		.tag {
+			background: var(--tag);
+			border: 1px solid var(--border);
+			color: var(--muted);
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.72rem;
+			padding: 3px 11px;
+			border-radius: 999px;
+		}
+
+		/* ── Links ── */
+		a.link {
+			color: var(--accent);
+			text-decoration: none;
+		}
+		a.link:hover { text-decoration: underline; }
+
+		/* ── Fade in ── */
+		.section {
+			opacity: 0;
+			transform: translateY(10px);
+			animation: fadeUp 0.4s ease forwards;
+		}
+		.section:nth-child(1) { animation-delay: 0.05s; }
+		.section:nth-child(2) { animation-delay: 0.12s; }
+		.section:nth-child(3) { animation-delay: 0.19s; }
+		.section:nth-child(4) { animation-delay: 0.26s; }
+		@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+		/* ── Avatar ── */
+		.avatar {
+			width: 180px;
+			height: 180px;
+			border-radius: 50%;
+			object-fit: cover;
+			border: 2px solid var(--border);
+		}
+
+		/* ── Theme toggle ── */
+		#theme-toggle {
+			background: none;
+			border: none;
+			cursor: pointer;
+			color: var(--muted);
+			padding: 4px;
+			transition: color 0.15s;
+			line-height: 0;
+		}
+		#theme-toggle:hover { color: var(--accent); }
+
+		/* ── Image overlay ── */
+		#overlay {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.85);
+			z-index: 1000;
+			align-items: center;
+			justify-content: center;
+			cursor: zoom-out;
+			display: flex;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.25s ease;
+		}
+		#overlay.open {
+			opacity: 1;
+			pointer-events: all;
+		}
+		#overlay img {
+			max-width: 75vw;
+			max-height: 75vh;
+			border-radius: 8px;
+			object-fit: contain;
+			box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+			transform: scale(0.92);
+			transition: transform 0.25s ease;
+		}
+		#overlay.open img {
+			transform: scale(1);
+		}
+
+		/* ── Mobile ── */
+		@media (max-width: 720px) {
+			#sidebar { display: none; }
+			#main { margin-left: 0; padding: 2rem 1.25rem; }
+		}
+	</style>
+</head>
+<body>
+
+<!-- ─── IMAGE OVERLAY ─────────────────────────────────── -->
+<div id="overlay" onclick="closeOverlay()">
+	<img id="overlay-img" src="" alt="" />
+</div>
+
+<!-- ─── SIDEBAR ──────────────────────────────────────── -->
+<aside id="sidebar">
+
+	<!-- Avatar row -->
+	<div style="width: 100%; display: flex; align-items: flex-start; justify-content: space-between;">
+		<img class="avatar" src="img/pfp.jpg" alt="Gabriel Freire Ushijima" />
+		<button id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+			<svg id="icon-moon" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+				<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+			</svg>
+			<svg id="icon-sun" width="20" height="20" fill="currentColor" viewBox="0 0 20 20" style="display:none;">
+				<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"/>
+			</svg>
+		</button>
+	</div>
+
+	<!-- Name & title -->
+	<div style="width: 100%;">
+		<p style="font-weight: 500; font-size: 25px; color: var(--text);">Gabriel F. Ushijima</p>
+		<p style="font-family: 'JetBrains Mono', monospace; font-size: 0.94rem; color: var(--muted); margin-top: 3px;">CS Student · IME-USP</p>
+		<div style="display: flex; align-items: center; gap: 4px; margin-top: 28px;">
+			<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color: var(--muted); flex-shrink: 0;">
+				<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+				<circle cx="12" cy="9" r="2.5"/>
+			</svg>
+			<span style="font-size: 17px; color: var(--muted);">Brazil — São Paulo, SP</span>
+		</div>
+	</div>
+
+	<!-- Nav -->
+	<nav style="display: flex; flex-direction: column; gap: 0.1rem; width: 100%;">
+		<a class="nav-link active" href="#about">
+			<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+			About
+		</a>
+		<a class="nav-link" href="#research">
+			<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+			Research
+		</a>
+		<a class="nav-link" href="#projects">
+			<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+			Projects
+		</a>
+		<a class="nav-link" href="#contact">
+			<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+			Contact
+		</a>
+	</nav>
+
+</aside>
+
+<!-- ─── MAIN ──────────────────────────────────────────── -->
+<main id="main">
+
+	<!-- About -->
+	<section class="section" id="about">
+		
+		<p class="section-title">about</p>
+		
+		<p style="line-height: 1.8; color: var(--text); margin-bottom: 1rem;">
+			Third-year Computer Science student at <strong>IME-USP</strong>.
+			I'm deeply interested in algorithms, computational geometry, optimization, programming languages, and the intersection between mathematical theory and software engineering.
+		</p>
+
+		<p style="line-height: 1.8; color: var(--muted); margin-bottom: 1rem;">
+			My current research focuses on the <em>Touring Polygons Problem</em>, a geometric optimization problem related to the Traveling Salesman Problem where regions are polygons and visitation order is fixed.
+			The project is funded by FAPESP and involves techniques from computational geometry, nonlinear optimization, second-order cone programming, mixed-integer optimization, combinatorial optimization, and Branch and Bound methods.
+		</p>
+
+		<p style="line-height: 1.8; color: var(--muted); margin-bottom: 1.5rem;">
+			Beyond research, I enjoy competitive programming and game development.
+			I'm a top 100 global user on Codewars and top 30 worldwide in Python, and I enjoy exploring programming languages ranging from low-level x86 assembly to esoteric languages like Brainfuck.
+			I like building systems that make abstract ideas tangible — from optimization visualizers and geometry tools to physics-based games and interactive simulations.
+		</p>
+		<span class="tag">Computational Geometry</span>
+		<span class="tag">Optimization</span>
+		<span class="tag">Competitive Programming</span>
+		<span class="tag">Game Development</span>
+		<span class="tag">Programming Languages</span>
+		<span class="tag">Algorithms</span>
+		<span class="tag">Scientific Computing</span>
+		<span class="tag">Python</span>
+		<span class="tag">C++</span>
+	</section>
+
+	<!-- Research -->
+	<section class="section" id="research">
+		<p class="section-title">research</p>
+
+		<div class="project-card">
+			<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+				<div>
+					<p style="font-weight: 500; font-size: 1.5rem; color: var(--text); margin-bottom: 0.25rem;">Touring Polygons Problem</p>
+					<p style="font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; color: var(--muted);">FAPESP Undergraduate Research · Jul 2024 – present</p>
+				</div>
+				<a href="https://github.com/YushiPy/TouringPolygons" target="_blank" class="link" style="font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; flex-shrink: 0;">↗ GitHub</a>
+			</div>
+			<p style="line-height: 1.7; color: var(--muted); margin-bottom: 1rem;">
+				Given a sequence of polygons in the plane, find the shortest path that visits each one in order.
+				The project combines computational geometry, point location data structures, and optimization methods
+				including LP, SOCP, NLP, and Branch and Bound. Presented at <strong style="color: var(--text);">SIICUSP 34</strong>.
+			</p>
+			<img class="card-img" src="img/SIICUSP.jpg" alt="SIICUSP 34 presentation" onclick="openOverlay(this)" />
+			<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+				<span class="tag">Computational Geometry</span>
+				<span class="tag">LP / SOCP / NLP</span>
+				<span class="tag">Branch and Bound</span>
+				<span class="tag">Python</span>
+				<span class="tag">C++</span>
+			</div>
+		</div>
+
+		<div class="project-card">
+			<p style="font-weight: 500; font-size: 1.5rem; color: var(--text); margin-bottom: 0.25rem;">Teaching Assistant — Nonlinear Optimization</p>
+			<p style="font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; color: var(--muted); margin-bottom: 0.75rem;">IME-USP</p>
+			<p style="line-height: 1.7; color: var(--muted);">
+				Assisting students in the Nonlinear Optimization course at IME-USP. Topics include:
+				unconstrained optimization (Cauchy, Newton, Quasi-Newton methods), globalization strategies
+				(line search, trust regions), and constrained optimization with equality and inequality constraints
+				(active set methods, optimality conditions, penalty methods).
+			</p>
+		</div>
+	</section>
+
+	<!-- Projects -->
+	<section class="section" id="projects">
+		<p class="section-title">projects</p>
+
+		<div class="project-card">
+			<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+				<p style="font-weight: 500; font-size: 1.5rem; color: var(--text);">Touring Polygons — Interactive Visualizer</p>
+				<!-- Replace # with your actual demo link -->
+				<a href="Visualizer/index.html" class="link" style="font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; flex-shrink: 0;">↗ open demo</a>
+			</div>
+			<p style="line-height: 1.7; color: var(--muted); margin-bottom: 1rem;">
+				An interactive web visualizer for the Touring Polygons Problem. Draw a sequence of polygons
+				on a canvas and watch the shortest visiting path computed in real time — bridging research
+				and intuition through live geometric feedback. Built with Python/FastAPI and JavaScript.
+			</p>
+			<img class="card-img" src="img/TSPN.jpg" alt="Touring Polygons visualizer" onclick="openOverlay(this)" />
+			<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+				<span class="tag">Python</span>
+				<span class="tag">FastAPI</span>
+				<span class="tag">JavaScript</span>
+				<span class="tag">Computational Geometry</span>
+			</div>
+		</div>
+
+		<div class="project-card">
+			<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+				<p style="font-weight: 500; font-size: 1.5rem; color: var(--text);">Portal 2D</p>
+				<span class="tag" style="flex-shrink: 0;">Project Lead</span>
+			</div>
+			<p style="line-height: 1.7; color: var(--muted); margin-bottom: 1rem;">
+				2D recreation of Portal built in Godot over 4 months as part of a USP extension group.
+				Led the project as main developer — handling core mechanics, portal physics, and team coordination.
+			</p>
+			<img class="card-img" src="img/Portal2D.jpg" alt="Portal 2D" onclick="openOverlay(this)" />
+			<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+				<span class="tag">Godot</span>
+				<span class="tag">GDScript</span>
+				<span class="tag">Team Leadership</span>
+				<span class="tag">Game Design</span>
+			</div>
+		</div>
+
+		<div class="project-card">
+			<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+				<p style="font-weight: 500; font-size: 1.5rem; color: var(--text);">Futuristic Dungeon Crawler</p>
+				<span class="tag" style="flex-shrink: 0;">Unreal Engine</span>
+			</div>
+			<p style="line-height: 1.7; color: var(--muted); margin-bottom: 1rem;">
+				3D dungeon crawler developed in Unreal Engine as part of a university course.
+				Handled 3D modeling, asset sourcing, map building, enemy AI behavior, and combat systems.
+			</p>
+			<img class="card-img" src="img/DungeonCrawler-1.jpg" alt="Dungeon Crawler" onclick="openOverlay(this)" />
+			<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+				<span class="tag">Unreal Engine</span>
+				<span class="tag">3D Modeling</span>
+				<span class="tag">AI Behavior</span>
+				<span class="tag">Computer Graphics</span>
+			</div>
+		</div>
+	</section>
+
+	<!-- Contact -->
+	<section class="section" id="contact">
+		<p class="section-title">contact</p>
+		<div class="project-card">
+			<a href="mailto:gabriel_ushijima@usp.br" class="link" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.85rem;">
+				<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+				gabriel_ushijima@usp.br
+			</a>
+			<a href="https://github.com/YushiPy" target="_blank" class="link" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.85rem;">
+				<svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.75-1.33-1.75-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+				github.com/YushiPy
+			</a>
+			<a href="https://www.linkedin.com/in/gabriel-ushijima-389332358/" target="_blank" class="link" style="display: flex; align-items: center; gap: 0.5rem;">
+				<svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+				LinkedIn
+			</a>
+		</div>
+	</section>
+
+	<footer style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); padding-top: 2rem; border-top: 1px solid var(--border);">
+		Gabriel Freire Ushijima · IME-USP · São Paulo
+	</footer>
+
+</main>
+
+<script>
+	// Always start at top on load/refresh
+	history.scrollRestoration = 'manual'
+	window.scrollTo(0, 0)
+
+	// Theme toggle
+	function toggleTheme() {
+		const html = document.documentElement
+		const moon = document.getElementById('icon-moon')
+		const sun  = document.getElementById('icon-sun')
+		if (html.classList.contains('dark')) {
+			html.classList.replace('dark', 'light')
+			moon.style.display = 'none'
+			sun.style.display  = 'block'
+		} else {
+			html.classList.replace('light', 'dark')
+			moon.style.display = 'block'
+			sun.style.display  = 'none'
+		}
+	}
+
+	// Image overlay
+	function openOverlay(img) {
+		document.getElementById('overlay-img').src = img.src
+		document.getElementById('overlay-img').alt = img.alt
+		document.getElementById('overlay').classList.add('open')
+	}
+	function closeOverlay() {
+		document.getElementById('overlay').classList.remove('open')
+	}
+	document.addEventListener('keydown', e => {
+		if (e.key === 'Escape') closeOverlay()
+	})
+
+	// Active nav on scroll
+	const sections = document.querySelectorAll('section[id]')
+	const navLinks = document.querySelectorAll('.nav-link')
+	window.addEventListener('scroll', () => {
+		let current = ''
+		sections.forEach(s => {
+			if (window.scrollY >= s.offsetTop - 80) current = s.id
+		})
+		navLinks.forEach(a => {
+			a.classList.toggle('active', a.getAttribute('href') === '#' + current)
+		})
+	})
+
+
+	window.addEventListener('load', async () => {
+		await new Promise(r => setTimeout(r, 20))
+		window.scrollTo(0, 0)
+	})
+</script>
+
+</body>
+</html>

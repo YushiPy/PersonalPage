@@ -1,15 +1,62 @@
 
 export const CANVAS_ELEMENT_ID = "drawing-canvas";
 
-export const INITIAL_UNITS_TO_PIXELS = 300;
-export const INITIAL_CAMERA_POSITION = { x: 0, y: 0 };
+export const INITIAL_UNITS_TO_PIXELS = 266.07748625964655;
 
-export const INITIAL_START_POINT = { x: 0, y: 0 };
-export const INITIAL_TARGET_POINT = { x: 1, y: 0 };
+export const INITIAL_CAMERA_POSITION = {
+	x: 0.8642425202470306,
+	y: 0.7865682930827428,
+};
+
+export const INITIAL_START_POINT = {
+	x: -0.2,
+	y: 0.7000000000000001,
+};
+
+export const INITIAL_TARGET_POINT = {
+	x: 1.1,
+	y: 0.2,
+};
 
 export const INITIAL_POLYGONS = [
-	[{ x: 0.5, y: 0.5 }, { x: 1.5, y: 0.5 }, { x: 1, y: 1 }],
-	[{ x: -0.5, y: 0.0 }, { x: -1.5, y: -0.5 }, { x: -1, y: -1 }, { x: -0.5, y: -1 }, { x: 0.5, y: -0.5 }],
+	[
+		{ x: 0, y: 1.5 },
+		{ x: -0.4, y: 1.48 },
+		{ x: -0.9, y: 1.48 },
+		{ x: -1.3, y: 1.5 },
+		{ x: -1.3, y: 1.3 },
+		{ x: -0.74, y: 1.3 },
+		{ x: -0.72, y: 0.5 },
+		{ x: -0.74, y: 0 },
+		{ x: -0.54, y: 0 },
+		{ x: -0.56, y: 0.5 },
+		{ x: -0.54, y: 1.3 },
+		{ x: 0, y: 1.3 },
+	],
+	[
+		{ x: 1.4000000000000001, y: 1.5 },
+		{ x: 0.4, y: 1.5 },
+		{ x: 0.4, y: 0 },
+		{ x: 0.6000000000000001, y: 0 },
+		{ x: 0.6000000000000001, y: 1.3 },
+		{ x: 1.2000000000000002, y: 1.3 },
+		{ x: 1.2000000000000002, y: 0.8 },
+		{ x: 0.7000000000000001, y: 0.8 },
+		{ x: 0.7000000000000001, y: 0.6000000000000001 },
+		{ x: 1.4000000000000001, y: 0.6000000000000001 },
+	],
+	[
+		{ x: 2.8000000000000003, y: 1.5 },
+		{ x: 2.8000000000000003, y: 0.6000000000000001 },
+		{ x: 2.2, y: 0.6000000000000001 },
+		{ x: 2.2, y: 0.8 },
+		{ x: 2.6, y: 0.8 },
+		{ x: 2.6, y: 1.3 },
+		{ x: 2, y: 1.3 },
+		{ x: 2, y: 0 },
+		{ x: 1.8, y: 0 },
+		{ x: 1.8, y: 1.5 },
+	],
 ];
 
 export const START_POINT_COLOR = "#00FFFF";

@@ -1,17 +1,41 @@
 import { Vector2 } from "./vector2.js";
-import { tppSolve } from "./tpp.js";
+import { tppSolve, tppConvexMaps } from "./tpp.js";
 import { convexPartition } from "./convex-partition.js";
 import * as settings from "./settings.js";
 import * as drawingStore from "./drawing-store.js";
 
-const floatToString = (integerPart, exponent) => {
+function floatToString(integerPart, exponent) {
+	
 	if (Math.abs(exponent) >= 5) {
 		return `${integerPart}e${exponent}`;
 	}
+
 	return (integerPart * Math.pow(10, exponent))
 		.toFixed(6)
 		.replace(/\.?0+$/, "");
 };
+
+function cleanPolygonPoints(points) {
+    const vecs = points.map(p => new Vector2(p));
+
+    const cleaned = [vecs[0], vecs[1]];
+    for (let i = 2; i < vecs.length; i++) {
+        const a = cleaned[cleaned.length - 2];
+        const b = cleaned[cleaned.length - 1];
+        const c = vecs[i];
+        if (b.sub(a).isSameDirection(c.sub(b))) {
+            cleaned[cleaned.length - 1] = c;
+        } else {
+            cleaned.push(c);
+        }
+    }
+
+    if (cleaned[1].sub(cleaned[0]).cross(cleaned[cleaned.length - 1].sub(cleaned[0])) < 0) {
+        cleaned.reverse();
+    }
+
+    return cleaned.map(v => [v.x, v.y]);
+}
 
 class Canvas {
 
@@ -562,6 +586,198 @@ class Scene {
 		}
 	}
 
+	drawMap() {
+
+		if (!this.showMap) return;
+		
+		const index = this.currentPolygon % this.polygons.length;
+		
+		if (this.polygons.length === 0) return;
+		if (!this.polygons.every(p => p.isConvex())) return;
+
+		const start = [this.startPoint.x, this.startPoint.y];
+		const target = [this.targetPoint.x, this.targetPoint.y];
+		const rawPolys = this.polygons.slice(0, index + 1).map(poly => poly.points.map(v => [v.x, v.y]));
+
+		// Clean polygons here so vertices stay in sync with cones/firstContact
+		const cleanedPolys = rawPolys.map(cleanPolygonPoints);
+		
+		let cones, firstContact;
+		try {
+			[cones, firstContact] = tppConvexMaps(start, target, cleanedPolys, false); // already cleaned
+		} catch (e) {
+			return;
+		}
+
+		const conesIndex = cones[index];
+		const firstContactIndex = firstContact[index];
+		const vertices = cleanedPolys[index].map(p => new Vector2(p)); // use cleaned vertices
+			
+		const n = vertices.length;
+		const ctx = this.canvas.ctx;
+
+		// World-space bbox from current camera view
+		const hw = (this.canvas.width / 2) * this.canvas.camera.pixelsToUnits;
+		const hh = (this.canvas.height / 2) * this.canvas.camera.pixelsToUnits;
+		const cx = this.canvas.camera.x;
+		const cy = this.canvas.camera.y;
+		const bbox = [cx - hw - 1, cy - hh - 1, cx + hw + 1, cy + hh + 1];
+
+		const locateRay = (origin, dir, bbox) => {
+			const [minx, miny, maxx, maxy] = bbox;
+			const dx = maxx - minx, dy = maxy - miny;
+			const walls = [
+				[{ x: minx, y: miny }, { x: dx,  y: 0  }],
+				[{ x: maxx, y: miny }, { x: 0,   y: dy }],
+				[{ x: maxx, y: maxy }, { x: -dx, y: 0  }],
+				[{ x: minx, y: maxy }, { x: 0,   y: -dy}],
+			];
+			for (const [ws, wd] of walls) {
+				const cross = dir.x * wd.y - dir.y * wd.x;
+				if (Math.abs(cross) < 1e-10) continue;
+				const sdx = ws.x - origin.x, sdy = ws.y - origin.y;
+				const r1 = (sdx * wd.y - sdy * wd.x) / cross;
+				const r2 = (sdx * dir.y - sdy * dir.x) / cross;
+				if (r1 >= 0 && r2 >= 0 && r2 <= 1)
+					return new Vector2(origin.x + dir.x * r1, origin.y + dir.y * r1);
+			}
+			return null;
+		};
+
+		const getWall = (p, bbox) => {
+			const [minx, miny, maxx, maxy] = bbox;
+			const eps = 1e-6;
+			if (Math.abs(p.y - miny) < eps) return 0;
+			if (Math.abs(p.x - maxx) < eps) return 1;
+			if (Math.abs(p.y - maxy) < eps) return 2;
+			if (Math.abs(p.x - minx) < eps) return 3;
+			return -1;
+		};
+
+		const corners = (bbox) => {
+			const [minx, miny, maxx, maxy] = bbox;
+			return [
+				new Vector2(maxx, miny),
+				new Vector2(maxx, maxy),
+				new Vector2(minx, maxy),
+				new Vector2(minx, miny),
+			];
+		};
+
+		const locateEdge = (origin1, dir1, origin2, dir2, bbox) => {
+			const p1 = locateRay(origin1, dir1, bbox);
+			const p2 = locateRay(origin2, dir2, bbox);
+			if (!p1 || !p2) return null;
+
+			let w1 = getWall(p1, bbox);
+			const w2 = getWall(p2, bbox);
+			const box = corners(bbox);
+
+			const cross = dir1.x * dir2.y - dir1.y * dir2.x;
+
+			if (w1 === w2 && cross < 0) {
+				const result = [origin1, p1];
+				for (let k = w1; k < w1 + 4; k++) result.push(box[k % 4]);
+				result.push(p2, origin2);
+				return result;
+			}
+
+			const result = [origin1, p1];
+			while (w1 !== w2) {
+				result.push(box[w1]);
+				w1 = (w1 + 1) % 4;
+			}
+			result.push(p2, origin2);
+			return result;
+		};
+
+		const locateCone = (origin, dir1, dir2, bbox) =>
+			locateEdge(origin, dir1, origin, dir2, bbox);
+
+		const cleanPolygon = (pts) => {
+			if (pts.length < 3) return pts;
+			const cleaned = [pts[0], pts[1]];
+			for (let i = 2; i < pts.length; i++) {
+				const a = cleaned[cleaned.length - 2];
+				const b = cleaned[cleaned.length - 1];
+				const c = pts[i];
+				const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+				if (Math.abs(cross) > 1e-10) cleaned.push(c);
+			}
+			// Ensure CCW
+			let area = 0;
+			for (let i = 0; i < cleaned.length; i++) {
+				const a = cleaned[i], b = cleaned[(i + 1) % cleaned.length];
+				area += a.x * b.y - b.x * a.y;
+			}
+			if (area < 0) cleaned.reverse();
+			return cleaned;
+		};
+
+		const fillPoly = (worldPts, fillColor, strokeColor, strokeWidth = 0) => {
+			if (!worldPts || worldPts.length < 3) return;
+			const pts = worldPts.map(p => this.canvas.worldToCanvas(p));
+			ctx.save();
+			ctx.beginPath();
+			ctx.moveTo(pts[0].x, pts[0].y);
+			for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+			ctx.closePath();
+			ctx.fillStyle = fillColor;
+			ctx.fill();
+			if (strokeWidth > 0) {
+				ctx.strokeStyle = strokeColor;
+				ctx.lineWidth = strokeWidth;
+				ctx.stroke();
+			}
+			ctx.restore();
+		};
+
+		// Draw cone regions (per vertex)
+		for (let i = 0; i < n; i++) {
+			const vertex = vertices[i];
+			const [ray1, ray2] = conesIndex[i];
+			const fc = firstContactIndex[i];
+			const fcPrev = firstContactIndex[(i - 1 + n) % n];
+
+			if (!fc && !fcPrev) {
+				// Degenerate: single ray, just draw a line
+				const endpoint = locateRay(vertex, ray1, bbox);
+				if (endpoint) this.canvas.drawLineWorld(vertex, endpoint, "rgba(0,200,200,0.8)", 2);
+				continue;
+			}
+
+			let pts = locateCone(vertex, ray1, ray2, bbox);
+			if (!pts) continue;
+			pts = cleanPolygon(pts);
+
+			// Orientation fix (matching Python's r1/r2 cross check)
+			const r1 = new Vector2(pts[pts.length - 2].x - vertex.x, pts[pts.length - 2].y - vertex.y);
+			const r2 = new Vector2(pts[1].x - vertex.x, pts[1].y - vertex.y);
+			const cross1 = r1.x * ray1.y - r1.y * ray1.x;
+			const cross2 = r2.x * ray2.y - r2.y * ray2.x;
+			if (cross1 < 0 && cross2 > 0) pts.reverse();
+
+			fillPoly(pts, "rgba(255,0,0,0.12)", "rgba(255,0,0,0.9)", 2);
+		}
+
+		// Draw edge regions (between consecutive vertices)
+		for (let i = 0; i < n; i++) {
+			const v1 = vertices[i];
+			const v2 = vertices[(i + 1) % n];
+			const ray1 = conesIndex[i][1];
+			const ray2 = conesIndex[(i + 1) % n][0];
+
+			const pts = locateEdge(v1, ray1, v2, ray2, bbox);
+			if (!pts) continue;
+
+			const color = firstContactIndex[i]
+				? "rgba(0,200,0,0.12)"
+				: "rgba(0,200,200,0.12)";
+
+			fillPoly(pts, color, null);
+		}
+	}
+
 	draw() {
 
 		// Fill background
@@ -571,6 +787,7 @@ class Scene {
 		this.canvas.clear();
 		this.drawGrid();
 		this.drawSolution();
+		this.drawMap();
 		this.drawPolygons();
 		this.drawVertexLine();
 		this.drawSelectionRect();
@@ -629,6 +846,7 @@ class Scene {
 			this.changeZoom(1 - e.deltaY * this.scrollSensitivity, this.mouseLocation);
 		};
 
+
 		window.addEventListener("blur", () => { this.mouseHeld = false; this.dragging = null; });
 		document.addEventListener("mouseleave", () => { this.mouseHeld = false; this.dragging = null; });
 		canvas.addEventListener("mousedown", this._boundMouseDown);
@@ -641,10 +859,12 @@ class Scene {
 		this._boundOnSnapping = () => this._updateSnapping(!this.snapping);
 		this._boundOnTriangle = () => this._onTriangle();
 		this._boundOnVertexLine = () => this._updateVertexLine(!this.showVertexLine);
+		this._boundOnMap = () => this._updateMap(!this.showMap);
 
 		this.snapButton.addEventListener("click", this._boundOnSnapping);
 		this.triangleButton.addEventListener("click", this._boundOnTriangle);
 		this.vertexLineButton.addEventListener("click", this._boundOnVertexLine);
+		this.mapButton.addEventListener("click", this._boundOnMap);
 	}
 
 	_removeInput() {
@@ -660,6 +880,7 @@ class Scene {
 		this.snapButton.removeEventListener("click", this._boundOnSnapping);
 		this.triangleButton.removeEventListener("click", this._boundOnTriangle);
 		this.vertexLineButton.removeEventListener("click", this._boundOnVertexLine);
+		this.mapButton.removeEventListener("click", this._boundOnMap);
 	}
 
 	_updateSnapping(value) {
@@ -670,6 +891,15 @@ class Scene {
 			this.snapButton.classList.add("active");
 		} else {
 			this.snapButton.classList.remove("active");
+		}
+	}
+
+	_updateMap(value) {
+		this.showMap = value;
+		if (this.showMap) {
+			this.mapButton.classList.add("active");
+		} else {
+			this.mapButton.classList.remove("active");
 		}
 	}
 
@@ -833,6 +1063,7 @@ class Scene {
 		if (e.key === "1") { this.snapButton.click(); }
 		if (e.key === "2") { this.triangleButton.click(); }
 		if (e.key === "3") { this.vertexLineButton.click(); }
+		if (e.key === "4") { this.mapButton.click(); }
 	}
 
 	_onKeyUp(e) {
@@ -901,6 +1132,7 @@ class Scene {
 			scrollSensitivity: this.scrollSensitivity,
 			snapping: this.snapping,
 			showVertexLine: this.showVertexLine,
+			showMap: this.showMap,
 
 			camera: {
 				position: [this.canvas.camera.x, this.canvas.camera.y],
@@ -943,6 +1175,7 @@ class Scene {
 
 			snapping: null,
 			showVertexLine: null,
+			showMap: null,
 
 			camera: {
 				position: settings.INITIAL_CAMERA_POSITION,
@@ -963,12 +1196,14 @@ class Scene {
 		this.snapButton = document.getElementById(settings.SNAP_BUTTON_ID);
 		this.triangleButton = document.getElementById(settings.MAKE_TRIANGLE_BUTTON_ID);
 		this.vertexLineButton = document.getElementById(settings.SHOW_VERTEX_LINE_BUTTON_ID);
+		this.mapButton = document.getElementById(settings.MAP_BUTTON_ID);
 
 		this.snapping = false;
 		this.showVertexLine = false;
 
 		this._updateSnapping(data.snapping === null ? this.snapButton.classList.contains("active") : data.snapping);
 		this._updateVertexLine(data.showVertexLine === null ? this.vertexLineButton.classList.contains("active") : data.showVertexLine);
+		this._updateMap(data.showMap === null ? this.mapButton.classList.contains("active") : (data.showMap ?? false));
 
 		const cameraData = data.camera || {};
 		const cameraPos = cameraData.position || settings.INITIAL_CAMERA_POSITION;

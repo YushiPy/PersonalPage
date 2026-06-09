@@ -127,6 +127,14 @@ function cleanPolygon(polygon) {
 	return cleaned;
 }
 
+export function cleanPolygons(polygons) {
+
+	polygons = polygons.map(polygon => polygon.map(vertex => new Vector2(vertex)));
+	polygons = polygons.map(cleanPolygon);
+
+	return polygons;
+}
+
 
 export function tppSolveConvex(start, target, polygons, simplify = false) {
 
@@ -342,6 +350,231 @@ export function tppSolveConvex(start, target, polygons, simplify = false) {
 	}
 
 	return removeCollinearPoints(queryFull(target, polygons.length));
+}
+
+/*
+Returns the cones and first contact maps for the given instance. Useful for visualization and debugging purposes.
+*/
+export function tppConvexMaps(start, target, polygons, simplify = false) {
+
+	start = new Vector2(start);
+	target = new Vector2(target);
+	polygons = polygons.map(polygon => polygon.map(vertex => new Vector2(vertex)));
+
+	if (simplify) {
+		polygons = polygons.map(cleanPolygon);
+	}
+
+	const cones = polygons.map(polygon => Array(polygon.length).fill(null));
+	const firstContact = polygons.map(polygon => Array(polygon.length).fill(false));
+
+	function getCone(i, j) {
+
+		if (cones[i][j] === null) {
+
+			const before = polygons[i][(j - 1 + polygons[i].length) % polygons[i].length];
+			const vertex = polygons[i][j];
+			const after = polygons[i][(j + 1) % polygons[i].length];
+
+			const last = query(vertex, i);
+			const diff = vertex.sub(last);
+
+			let ray1 = diff.reflect(vertex.sub(before).perpendicular());
+			let ray2 = diff.reflect(after.sub(vertex).perpendicular());
+
+			firstContact[i][(j - 1 + polygons[i].length) % polygons[i].length] = diff.cross(vertex.sub(before)) < 0;
+			firstContact[i][j] = diff.cross(after.sub(vertex)) < 0;
+
+			if (!firstContact[i][(j - 1 + polygons[i].length) % polygons[i].length]) {
+				ray1 = diff;
+			}
+
+			if (!firstContact[i][j]) {
+				ray2 = diff;
+			}
+
+			cones[i][j] = [ray1, ray2];
+		}
+
+		return cones[i][j];
+	}
+
+	function locatePointLinearSearch(point, i) {
+
+		const polygon = polygons[i];
+
+		for (let j = 0; j < polygon.length; j++) {
+
+			const v = polygon[j];
+			const [ray1, ray2] = getCone(i, j);
+
+			if (!firstContact[i][j] && !firstContact[i][(j - 1 + polygon.length) % polygon.length]) {
+				continue;
+			}
+
+			if (pointInCone(point, v, ray1, ray2)) {
+				return 2 * j;
+			}
+		}
+
+		for (let j = 0; j < polygon.length; j++) {
+
+			const v1 = polygon[j];
+			const v2 = polygon[(j + 1) % polygon.length];
+
+			const ray1 = getCone(i, j)[1];
+			const ray2 = getCone(i, (j + 1) % polygon.length)[0];
+
+			if (pointInEdge(point, v1, ray1, v2, ray2)) {
+				return firstContact[i][j] ? 2 * j + 1 : -1;
+			}
+		}
+
+		return -1;
+	}
+
+	function locatePointBinarySearch(point, i) {
+
+		function checkVertex(j) {
+			return pointInCone2(point, polygon[j], ...getCone(i, j));
+		}
+
+		function checkEdge(l, r) {
+
+			const rIndex = (r + 1) % polygon.length;
+
+			const v1 = polygon[l];
+			const v2 = polygon[rIndex];
+			const ray1 = getCone(i, l)[1];
+			const ray2 = getCone(i, rIndex)[0];
+
+			return pointInEdge2(point, v1, v2, ray1, ray2);
+		}
+
+		const polygon = polygons[i];
+
+		let left = 0;
+		let right = polygon.length - 1;
+
+		if (checkVertex(0)) {
+			return 0;
+		}
+
+		while (left !== right) {
+
+			const mid = Math.floor((left + right) / 2);
+
+			if (checkVertex(mid + 1)) {
+				return 2 * (mid + 1);
+			}
+
+			if (checkEdge(left, mid)) {
+				right = mid;
+			} else {
+				left = mid + 1;
+			}
+		}
+
+		if (!checkEdge(left, right)) {
+			throw new Error("Point is not located in any cone or edge.");
+		}
+
+		return 2 * left + 1;
+	}
+
+	function locatePoint(point, i) {
+
+		if (polygons[i].length < BINARY_SEACH_THRESHOLD) {
+			return locatePointLinearSearch(point, i);
+		}
+
+		const location = locatePointBinarySearch(point, i);
+		const visible = firstContact[i];
+
+		if (visible[Math.floor(location / 2)] || visible[Math.floor((location - 1) / 2)]) {
+			return location;
+		} else {
+			return -1;
+		}
+	}
+
+	function queryFull(point, i) {
+
+		if (i === 0) {
+			return [start, point];
+		}
+
+		const polygon = polygons[i - 1];
+		const location = locatePoint(point, i - 1);
+
+		if (location === -1) {
+			return queryFull(point, i - 1);
+		}
+
+		const pos = Math.floor(location / 2);
+
+		if (location % 2 === 0) {
+			return queryFull(polygon[pos], i - 1).concat([point]);
+		}
+
+		const v1 = polygon[pos];
+		const v2 = polygon[(pos + 1) % polygon.length];
+
+		const reflected = point.reflectSegment(v1, v2);
+
+		const path = queryFull(reflected, i - 1);
+		const last = path[path.length - 2];
+
+		const intersection = segmentSegmentIntersection(last, reflected, v1, v2);
+
+		if (intersection === null) {
+			throw new Error(`Intersection not found for point ${point} in polygon ${i} at edge ${pos}`);
+		}
+
+		return path.slice(0, -1).concat([intersection, point]);
+	}
+
+	function query(point, i) {
+
+		if (i === 0) {
+			return start;
+		}
+
+		const polygon = polygons[i - 1];
+		const location = locatePoint(point, i - 1);
+
+		if (location === -1) {
+			return query(point, i - 1);
+		}
+
+		const pos = Math.floor(location / 2);
+
+		if (location % 2 === 0) {
+			return polygon[pos];
+		}
+
+		const v1 = polygon[pos];
+		const v2 = polygon[(pos + 1) % polygon.length];
+
+		const reflected = point.reflectSegment(v1, v2);
+		const last = query(reflected, i - 1);
+
+		const intersection = segmentSegmentIntersection(last, reflected, v1, v2);
+
+		if (intersection === null) {
+			throw new Error(`Intersection not found for point ${point} in polygon ${i} at edge ${pos}`);
+		}
+
+		return intersection;
+	}
+
+	for (let i = 0; i < polygons.length; i++) {
+		for (let j = 0; j < polygons[i].length; j++) {
+			getCone(i, j);
+		}
+	}
+
+	return [cones, firstContact];
 }
 
 function convexHull(points) {

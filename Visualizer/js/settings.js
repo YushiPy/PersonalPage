@@ -100,6 +100,7 @@ export const DOUBLE_CLICK_TIME = 300;
 export const SNAP_BUTTON_ID = "snapping-toggle";
 export const MAKE_TRIANGLE_BUTTON_ID = "triangle-button";
 export const SHOW_VERTEX_LINE_BUTTON_ID = "vertex-line-toggle";
+export const MAP_BUTTON_ID = "map-toggle";
 
 export const OVERLAY_ELEMENTS_ID = [
 	"saved-drawings-overlay",

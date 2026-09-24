@@ -4,6 +4,7 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Gabriel F. Ushijima</title>
+	<meta name="description" content="Gabriel F. Ushijima is a Computer Science student at IME-USP working on computational geometry, optimization, research software, and quantitative finance." />
 	<link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
 	<script src="https://cdn.tailwindcss.com"></script>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -305,18 +306,16 @@
 		
 		<p style="line-height: 1.8; color: var(--text); margin-bottom: 1rem;">
 			Third-year Computer Science student at <strong>IME-USP</strong>.
-			I'm deeply interested in algorithms, computational geometry, optimization, programming languages, and the intersection between mathematical theory and software engineering.
+			I'm interested in algorithms, computational geometry, mathematical optimization, and software that makes abstract ideas useful and interactive.
 		</p>
 
 		<p style="line-height: 1.8; color: var(--muted); margin-bottom: 1rem;">
-			My current research focuses on the <em>Touring Polygons Problem</em>, a geometric optimization problem related to the Traveling Salesman Problem where regions are polygons and visitation order is fixed.
-			The project is funded by FAPESP and involves techniques from computational geometry, nonlinear optimization, second-order cone programming, mixed-integer optimization, combinatorial optimization, and Branch and Bound methods.
+			My research focuses on the <em>Touring Polygons Problem</em>, a generalization of the Traveling Salesman Problem in which a route visits polygonal regions in any order.
+			I'm developing an exact solver for its non-convex case, combining computational geometry and optimization with rational arithmetic.
 		</p>
 
 		<p style="line-height: 1.8; color: var(--muted); margin-bottom: 1.5rem;">
-			Beyond research, I enjoy competitive programming and game development.
-			I'm a top 100 global user on Codewars and top 30 worldwide in Python, and I enjoy exploring programming languages ranging from low-level x86 assembly to esoteric languages like Brainfuck.
-			I like building systems that make abstract ideas tangible — from optimization visualizers and geometry tools to physics-based games and interactive simulations.
+			I'm also interested in data-driven work in quantitative finance. Alongside research, I've built a rainfall-driven strategy study for B3 agribusiness stocks and enjoy making technical ideas tangible through visualizers, games, and interactive simulations.
 		</p>
 		<span class="tag">Computational Geometry</span>
 		<span class="tag">Optimization</span>
@@ -325,6 +324,7 @@
 		<span class="tag">Programming Languages</span>
 		<span class="tag">Algorithms</span>
 		<span class="tag">Scientific Computing</span>
+		<span class="tag">Quantitative Finance</span>
 		<span class="tag">Python</span>
 		<span class="tag">C++</span>
 	</section>
@@ -337,21 +337,25 @@
 			<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
 				<div>
 					<p style="font-weight: 500; font-size: 1.5rem; color: var(--text); margin-bottom: 0.25rem;">Touring Polygons Problem</p>
-					<p style="font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; color: var(--muted);">FAPESP Undergraduate Research · Jul 2024 – present</p>
+					<p style="font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; color: var(--muted);">Undergraduate Research · Jul 2025 – present · FAPESP scholarship since Apr 2026</p>
 				</div>
-				<a href="https://github.com/YushiPy/TouringPolygons" target="_blank" class="link" style="font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; flex-shrink: 0;">↗ GitHub</a>
+				<div style="display: flex; flex-wrap: wrap; gap: 0.9rem;">
+					<a href="https://github.com/YushiPy/TouringPolygons" target="_blank" rel="noopener noreferrer" class="link" style="font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; flex-shrink: 0;">↗ GitHub</a>
+					<a href="https://yushipy.github.io/TouringPolygons/apps/siicusp34/" target="_blank" rel="noopener noreferrer" class="link" style="font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; flex-shrink: 0;">↗ SIICUSP 34</a>
+				</div>
 			</div>
 			<p style="line-height: 1.7; color: var(--muted); margin-bottom: 1rem;">
-				Given a sequence of polygons in the plane, find the shortest path that visits each one in order.
-				The project combines computational geometry, point location data structures, and optimization methods
-				including LP, SOCP, NLP, and Branch and Bound. Presented at <strong style="color: var(--text);">SIICUSP 34</strong>.
+				I'm developing an exact solver for the free-order, non-convex Touring Polygons Problem, a TSP generalization where a route visits polygonal regions in any order. The solver uses rational arithmetic and has no external-library dependencies.
+				Against <a class="link" href="https://doi.org/10.4230/LIPIcs.SoCG.2026.46" target="_blank" rel="noopener noreferrer">Fekete et al. (2026)</a>, it achieved a 5.11× median speedup across 550 shared benchmark cases. With a six-hour per-instance limit, it completed all 558 cases, while the reference solver completed 550.
+			</p>
+			<p style="line-height: 1.7; color: var(--muted); margin-bottom: 1rem;">
+				The <a class="link" href="https://yushipy.github.io/TouringPolygons/apps/siicusp34/" target="_blank" rel="noopener noreferrer">SIICUSP 34 presentation site</a> includes interactive instances, a challenge, a simulation, and benchmark results.
 			</p>
 			<img class="card-img" src="img/SIICUSP.jpg" alt="SIICUSP 34 presentation" onclick="openOverlay(this)" />
 			<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
 				<span class="tag">Computational Geometry</span>
-				<span class="tag">LP / SOCP / NLP</span>
-				<span class="tag">Branch and Bound</span>
-				<span class="tag">Python</span>
+				<span class="tag">Exact Algorithms</span>
+				<span class="tag">Rational Arithmetic</span>
 				<span class="tag">C++</span>
 			</div>
 		</div>
@@ -371,6 +375,22 @@
 	<!-- Projects -->
 	<section class="section" id="projects">
 		<p class="section-title">projects</p>
+
+		<div class="project-card">
+			<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+				<p style="font-weight: 500; font-size: 1.5rem; color: var(--text);">SERIEMA — Quant AI Itaú Asset 2026</p>
+				<a href="https://github.com/out-of-sample/Quant-AI-Itau-2026" target="_blank" rel="noopener noreferrer" class="link" style="font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; flex-shrink: 0;">↗ GitHub</a>
+			</div>
+			<p style="line-height: 1.7; color: var(--muted); margin-bottom: 1rem;">
+				Developed and backtested a point-in-time, rainfall-driven long/short strategy for B3 agribusiness stocks, testing whether local weather could anticipate CONAB crop-estimate revisions. Our team ranked among the top 5% in the challenge; the certificate is available on <a class="link" href="https://www.linkedin.com/in/gabriel-ushijima-389332358/" target="_blank" rel="noopener noreferrer">LinkedIn</a>.
+			</p>
+			<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+				<span class="tag">Quantitative Finance</span>
+				<span class="tag">Python</span>
+				<span class="tag">Backtesting</span>
+				<span class="tag">Financial Data</span>
+			</div>
+		</div>
 
 		<div class="project-card">
 			<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
